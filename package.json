@@ -48,5 +48,8 @@
     "commitizen": {
       "path": "cz-conventional-changelog"
     }
+  },
+  "dependencies": {
+    "puppeteer-firefox": "^0.5.0"
   }
 }

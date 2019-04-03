@@ -1,4 +1,7 @@
 /* global jest,test,describe */
+const puppeteerFirefox = require('puppeteer-firefox');
+const webExt = require('web-ext');
+const path = require('path');
 require('../utils/console');
 const { compile } = require('../utils/template');
 const {
@@ -144,11 +147,16 @@ function execCase({
     global.__beforeEachCase__ = beforeEachCase;
     global.__afterEachCase__ = afterEachCase;
     await beforeEachStart(context, beforeEachCase);
-    if (!context.options.isUT) {
+    
+    if (!context.options.isUT && context.options.tag.project !== 'firefoxExtension') {
       if (context.options.isSandbox) {
         await context.driver.run({ ...context.options.config, isHeadless });
         await context.driver.newPage();
       }
+      await context.driver.goto(context.options.config);
+    }
+    else if (context.options.tag.project === 'firefoxExtension') {
+      await context.driver.launchWithExtension(context.options.config);
       await context.driver.goto(context.options.config);
     }
     await fn(context);
