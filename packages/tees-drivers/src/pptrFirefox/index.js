@@ -1,9 +1,9 @@
 const pptrFirefox = require('puppeteer-firefox');
 const path = require('path');
-const webExt = require('web-ext');
+const webExt = require('web-ext').default;
 const fs_extra = require('fs-extra');
 const { exec } = require('child_process');
-const net = require('net');
+const get_port = require('get-port');
 
 const {
   Driver: BaseDriver,
@@ -193,41 +193,27 @@ class Driver extends BaseDriver {
     });
   }
 
-  async chooseLocalTcpPort() {
-    return new Promise((resolve) => {
-      const srv = net.createServer();
-      // $FLOW_FIXME: flow has his own opinions on this method signature.
-      srv.listen(0, () => {
-        const freeTcpPort = srv.address().port;
-        srv.close();
-        resolve(freeTcpPort);
-      });
-    });
-  }
-
 async launchWithExtension(config) {
   const ext = config.extension;
   const extDir = `../../extension/${config.extname}`;
   const extensionPath = path.resolve(process.cwd(), extDir);
   debugger;
-  const CDPPort = 6006;
+  const CDPPort = await get_port();
   if (await fs_extra.pathExistsSync(extensionPath)) {
-    await fs_extra.emptyDir(extensionPath)
+    await fs_extra.remove(extensionPath)
       .then(() => {
         console.log('Clean up extension dir Success!');
       }).catch((err) => {
         console.error(err);
       });
-  } else {
-      await fs_extra.mkdir(extensionPath)
-      .then(
-        () => {
-          console.log('make extension dir Success!');
-        }).catch((err) => {
-          console.error(err);
-        }
-      );
-    }
+  } 
+  await fs_extra.mkdir(extensionPath)
+    .then(() => {
+        console.log('make extension dir Success!');
+      }).catch((err) => {
+        console.error(err);
+      });
+    
   await exec(`unzip -o ${ext} -d ${extensionPath}`, { maxBuffer: 1024 * 500 }, (err, stdout, stderr) => {
       if (err) {
         console.log(err);
@@ -237,7 +223,7 @@ async launchWithExtension(config) {
       console.log(`stderr: ${stderr}`);
     });
 
-    await webExt.default.cmd.run({
+    await webExt.cmd.run({
       sourceDir: extensionPath,
       firefox: pptrFirefox.executablePath(),
       startUrl: 'about:debugging',
