@@ -16,6 +16,8 @@ const {
   Query: BaseQuery
 } = require('../base');
 
+const EXTENSION_TOOL_BAR_ID = 'integration-for-google-firefox-version_ringcentral_com-browser-action';
+
 class Query extends BaseQuery {
   async getText(selector, options) {
     const element = await this._getElement(selector, options);
@@ -166,7 +168,6 @@ class Driver extends BaseDriver {
   }
 
   async run({ configSetting, type, extension = '',executablePath = '' , userDataDir = '', isHeadless } = {}) {
-    debugger;
     const extDir = extension.split('.xpi')[0];
     const extensionPath = path.resolve(process.cwd(), extDir);
     if (await fs_extra.pathExistsSync(extensionPath)) {
@@ -197,24 +198,24 @@ class Driver extends BaseDriver {
     let geckodriver;
     const webExtension = await webExtensionsGeckoDriver(manifestPath);
     geckodriver = webExtension.geckodriver;
-    const helper = {
+    this.helper = {
       toolbarButton() {
         return geckodriver.wait(until.elementLocated(
-          By.id('integration-for-google-firefox-version_ringcentral_com-browser-action')
+          By.id(`${EXTENSION_TOOL_BAR_ID}`)
         ), 10000);
+      },
+      getHandles() {
+        return geckodriver.wait(async() => {
+          const handles = await geckodriver.getAllWindowHandles();
+          return handles;
+        }, 20000);
+      },
+      waitForElement(id) {
+        return geckodriver.wait(until.elementLocated(
+          By.id(`${id}`)
+        ), 30*1000);
       }
     };
-    debugger;
-    const button = await helper.toolbarButton();
-    await button.click();
-    let handles;
-    await geckodriver.wait(async () => {
-      handles = await geckodriver.getAllWindowHandles();
-      return handles.length === 2;
-    }, 20000, 'Should have opened a new tab');
-    await geckodriver.switchTo().window(handles[1]);
-    const currentUrl = await geckodriver.getCurrentUrl();
-    console.log(currentUrl);
     this._browser = geckodriver;
   }
 
@@ -223,11 +224,25 @@ class Driver extends BaseDriver {
   }
 
   async goto(config) {
-  if (config.type === 'extension') {
-    
-  } else {
-    await this._browser.get(config.location);
-  }
+    if (config.type === 'extension') {
+      const button = await this.helper.toolbarButton();
+      await button.click();
+      await this._browser.sleep(2*1000);
+      const handles = await this.helper.getHandles();
+      await this._browser.switchTo().window(handles[1]);
+      this._page = this._browser;
+      const currentUrl = await this._browser.getCurrentUrl();
+      console.log(`currentUrl: ${currentUrl}`);
+      debugger;
+      const uri = await this._browser.executeScript('document.querySelector(\'[contextmenu="contentAreaContextMenu"]\')._contentPrincipal.siteOrigin');
+      await this._browser.switchTo().window(handles[0]);
+      await this._browser.executeScript(`window.open(${uuid}/standalong.html)`);
+      await this.helper.waitForElement('rc-widget-adapter-frame');
+      await this._browser.switchTo().frame(By.id('rc-widget-adapter-frame'));
+      await this._browser.click(By.css('[data-sign="loginButton"]'));
+    } else {
+      await this._browser.get(config.location);
+    }
 }
 
   async closePage() {
