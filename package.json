@@ -50,6 +50,7 @@
     }
   },
   "dependencies": {
-    "puppeteer-firefox": "^0.5.0"
+    "puppeteer-firefox": "^0.5.0",
+    "webextensions-geckodriver": "^0.5.1"
   }
 }

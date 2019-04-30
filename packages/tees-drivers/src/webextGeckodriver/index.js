@@ -4,7 +4,12 @@ const fs_extra = require('fs-extra');
 const { exec } = require('child_process');
 
 const webExtensionsGeckoDriver = require('webextensions-geckodriver');
-const {webdriver} = webExtensionsGeckoDriver;
+const {webdriver, firefox} = webExtensionsGeckoDriver;
+const {
+  Builder,
+  By,
+  until
+} = require('selenium-webdriver');
 
 const {
   Driver: BaseDriver,
@@ -192,6 +197,24 @@ class Driver extends BaseDriver {
     let geckodriver;
     const webExtension = await webExtensionsGeckoDriver(manifestPath);
     geckodriver = webExtension.geckodriver;
+    const helper = {
+      toolbarButton() {
+        return geckodriver.wait(until.elementLocated(
+          By.id('integration-for-google-firefox-version_ringcentral_com-browser-action')
+        ), 10000);
+      }
+    };
+    debugger;
+    const button = await helper.toolbarButton();
+    await button.click();
+    let handles;
+    await geckodriver.wait(async () => {
+      handles = await geckodriver.getAllWindowHandles();
+      return handles.length === 2;
+    }, 20000, 'Should have opened a new tab');
+    await geckodriver.switchTo().window(handles[1]);
+    const currentUrl = await geckodriver.getCurrentUrl();
+    console.log(currentUrl);
     this._browser = geckodriver;
   }
 
@@ -201,11 +224,7 @@ class Driver extends BaseDriver {
 
   async goto(config) {
   if (config.type === 'extension') {
-    await this._browser.get('about:debugging');
-    const element = await this._browser.findElement(By.css(`li[data-addon-id='${config.extname}']> dl > dd[class*='internal-uuid']>span`));
-    const uuid = await  element.getAttribute('title');
-    const location = `moz-extension://${uuid}/standalong.html`;
-    await this._browser.get(location);
+    
   } else {
     await this._browser.get(config.location);
   }

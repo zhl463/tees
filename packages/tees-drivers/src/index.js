@@ -3,6 +3,7 @@ const enzyme = require('./enzyme');
 const puppeteer = require('./puppeteer');
 const getSeleniumWebdriver = require('./seleniumWebdriver');
 const pptrFirefox = require('./pptrFirefox');
+const webextGeckodriver = require('./webextGeckodriver');
 
 module.exports = {
   ut: base,
@@ -10,6 +11,7 @@ module.exports = {
   enzyme,
   puppeteer,
   pptrFirefox,
+  webextGeckodriver,
   chrome: getSeleniumWebdriver('Chrome'),
   ie: getSeleniumWebdriver('Ie'),
   edge: getSeleniumWebdriver('Edge'),

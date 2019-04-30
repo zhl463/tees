@@ -240,8 +240,6 @@ async launchWithExtension(config) {
     this._browser = await pptrFirefox.connect({
       browserWSEndpoint,
     });
-    debugger;
-    await this._browser.waitForSelector(`${EXTENSION_ID}`).click();
   }
 
   async newPage() {
@@ -251,7 +249,12 @@ async launchWithExtension(config) {
   async goto(config) {
     debugger;
     if (config.type === 'extension') {
-      
+      const _page =await  browser.newPage();
+      await _page.goto('http://www.baidu.com');
+
+      console.log('title',await _page.title());
+      await _page.type('#kw','haha');
+
       await $(this._browser).getNewOpenPage();
     } else {
       await this._page.goto(config.location);
