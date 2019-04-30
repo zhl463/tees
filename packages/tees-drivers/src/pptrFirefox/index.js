@@ -5,6 +5,8 @@ const fs_extra = require('fs-extra');
 const { exec } = require('child_process');
 const get_port = require('get-port');
 
+const EXTENSION_ID = 'integration-for-google-firefox-version_ringcentral_com-browser-action';
+
 const {
   Driver: BaseDriver,
   Query: BaseQuery
@@ -234,10 +236,12 @@ async launchWithExtension(config) {
       shouldExitProgram: true,
     });
 
-  const browserWSEndpoint = `ws://127.0.0.1:${CDPPort}`;
-  this._browser = await pptrFirefox.connect({
-    browserWSEndpoint,
-  });
+    const browserWSEndpoint = `ws://127.0.0.1:${CDPPort}`;
+    this._browser = await pptrFirefox.connect({
+      browserWSEndpoint,
+    });
+    debugger;
+    await this._browser.waitForSelector(`${EXTENSION_ID}`).click();
   }
 
   async newPage() {
@@ -247,15 +251,8 @@ async launchWithExtension(config) {
   async goto(config) {
     debugger;
     if (config.type === 'extension') {
-      const configPagePromise = new Promise(resolve => this._browser.on('targetChanged', async(t)=>{
-        console.log('config page created');
-        resolve(await t.page());
-      }));
-      await this._page.goto('about:debugging');
-      const uuid = this._page.$(`li[data-addon-id='${config.extname}']> dl > dd[class*='internal-uuid']>span`).innerText;
       
-      const location = `moz-extension://${uuid}/standalong.html`;
-      await this._page.goto(location);
+      await $(this._browser).getNewOpenPage();
     } else {
       await this._page.goto(config.location);
     }

@@ -148,14 +148,14 @@ function execCase({
     global.__afterEachCase__ = afterEachCase;
     await beforeEachStart(context, beforeEachCase);
     
-    if (!context.options.isUT && context.options.tag.project !== 'firefoxExtension') {
+    if (!context.options.isUT && context.options.driver !== 'pptrFirefox') {
       if (context.options.isSandbox) {
         await context.driver.run({ ...context.options.config, isHeadless });
         await context.driver.newPage();
       }
       await context.driver.goto(context.options.config);
     }
-    else if (context.options.tag.project === 'firefoxExtension') {
+    else if (context.options.driver == 'pptrFirefox') {
       await context.driver.launchWithExtension(context.options.config);
       await context.driver.goto(context.options.config);
     }
